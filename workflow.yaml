@@ -27,8 +27,8 @@ jobs:
       - name: Run Proxy
         run: |
           source "$VENV_DIR/bin/activate"
-          echo "running  mitmdump --mode reverse:https://generativelanguage.googleapis.com:443 --listen-port ${{ inputs.proxy_port }} --listen-host 127.0.0.1"
-          mitmdump --mode reverse:https://generativelanguage.googleapis.com:443 --listen-port ${{ inputs.proxy_port }} --listen-host 127.0.0.1
+          echo "running $VENV_DIR/bin/mitmdump --mode reverse:https://generativelanguage.googleapis.com:443 --listen-port ${{ inputs.proxy_port }} --listen-host 127.0.0.1"
+          $VENV_DIR/bin/mitmdump --mode reverse:https://generativelanguage.googleapis.com:443 --listen-port ${{ inputs.proxy_port }} --listen-host 127.0.0.1
 'on':
   execute:
     inputs:
