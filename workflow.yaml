@@ -1,0 +1,49 @@
+jobs:
+  tunnel:
+    steps:
+      - name: Create Tunnel
+        run: |
+          ssh -N -T \
+           -R 127.0.0.1:${{ inputs.tunnel_port }}:generativelanguage.googleapis.com:443 \
+           -o ExitOnForwardFailure=yes \
+           -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
+            ${{ inputs.resource.ip }}
+  proxy:
+    ssh:
+      remoteHost: ${{ inputs.resource.ip }}
+    env:
+      VENV_DIR: ~/gemini-proxy-venv
+    steps:
+      - name: Install MITMPROXY
+        run: |
+          python3 -m venv "$VENV_DIR"
+          source "$VENV_DIR/bin/activate"
+          if \! "$VENV_DIR/bin/python" -c "import mitmproxy" >/dev/null 2>&1; then
+            pip install mitmproxy
+            echo "Created venv in $VENV_DIR. Activate with: source $VENV_DIR/bin/activate"
+          else
+            echo "mitmproxy already installed in $VENV_DIR"
+          fi
+      - name: Run Proxy
+        run: |
+          source "$VENV_DIR/bin/activate"
+          echo "running  mitmdump --mode reverse:https://generativelanguage.googleapis.com:443 --listen-port ${{ inputs.proxy_port }} --listen-host 127.0.0.1"
+          mitmdump --mode reverse:https://generativelanguage.googleapis.com:443 --listen-port ${{ inputs.proxy_port }} --listen-host 127.0.0.1
+'on':
+  execute:
+    inputs:
+      resource:
+        label: Resource Target
+        type: compute-clusters
+        autoselect: true
+        optional: false
+      proxy_port:
+        label: Local Proxy Port
+        type: string
+        default: '25000'
+        tooltip: Port used to connect to Gemini (ie http://125.0.0.1:25000).
+      tunnel_port:
+        label: Local Tunnel Port
+        type: string
+        default: '8443'
+        tooltip: Port used for ssh tunnel to user workspace.
