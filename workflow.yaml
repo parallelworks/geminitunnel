@@ -11,11 +11,10 @@ jobs:
   proxy:
     ssh:
       remoteHost: ${{ inputs.resource.ip }}
-    env:
-      VENV_DIR: ~/gemini-proxy-venv
     steps:
       - name: Install MITMPROXY
         run: |
+          export VENV_DIR="$HOME/gemini-proxy-venv"
           python3 -m venv "$VENV_DIR"
           source "$VENV_DIR/bin/activate"
           if \! "$VENV_DIR/bin/python" -c "import mitmproxy" >/dev/null 2>&1; then
@@ -26,9 +25,11 @@ jobs:
           fi
       - name: Run Proxy
         run: |
+          export VENV_DIR="$HOME/gemini-proxy-venv"
           source "$VENV_DIR/bin/activate"
-          echo "running $VENV_DIR/bin/mitmdump --mode reverse:https://generativelanguage.googleapis.com:443 --listen-port ${{ inputs.proxy_port }} --listen-host 127.0.0.1"
-          $VENV_DIR/bin/mitmdump --mode reverse:https://generativelanguage.googleapis.com:443 --listen-port ${{ inputs.proxy_port }} --listen-host 127.0.0.1
+          which python
+          echo "running mitmdump --mode reverse:https://generativelanguage.googleapis.com:443 --listen-port ${{ inputs.proxy_port }} --listen-host 127.0.0.1"
+          mitmdump --mode reverse:https://generativelanguage.googleapis.com:443 --listen-port ${{ inputs.proxy_port }} --listen-host 127.0.0.1
 'on':
   execute:
     inputs:
